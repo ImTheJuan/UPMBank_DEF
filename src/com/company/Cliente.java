@@ -4,11 +4,13 @@ import java.util.Objects;
 import java.util.Scanner;
 
 public class Cliente {
-    private String nombre;
-    private String apellidos;
-    private String correo;
-    private String dni;
-    private String fechaNacimiento;
+    final private String nombre;
+    final private String apellidos;
+    final private String correo;
+    final private String dni;
+    final private String fechaNacimiento;
+    final private Cuenta[] listaCuentas;
+    private int numeroDeCuentas;
 
     public Cliente(String nombre, String apellidos, String correo, String dni, String fechaNacimiento) {
         this.nombre = nombre;
@@ -16,26 +18,8 @@ public class Cliente {
         this.correo = correo;
         this.dni = dni;
         this.fechaNacimiento = fechaNacimiento;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public void setApellidos(String apellidos) {
-        this.apellidos = apellidos;
-    }
-
-    public void setCorreo(String correo) {
-        this.correo = correo;
-    }
-
-    public void setDni(String dni) {
-        this.dni = dni;
-    }
-
-    public void setFechaNacimiento(String fechaNacimiento) {
-        this.fechaNacimiento = fechaNacimiento;
+        this.listaCuentas = new Cuenta[10];
+        this.numeroDeCuentas = 0;
     }
 
     public String getNombre() {
@@ -58,17 +42,32 @@ public class Cliente {
         return fechaNacimiento;
     }
 
-    public static String comprobarCorreo(Scanner teclado) {
+    public Cuenta[] getListaCuentas() {
+        return listaCuentas;
+    }
+
+    public int getNumeroDeCuentas() {
+        return numeroDeCuentas;
+    }
+
+    public void setNumeroDeCuentas(int numeroDeCuentas) {
+        this.numeroDeCuentas = numeroDeCuentas;
+    }
+
+    //Función que comprueba que el correo pertenezca a la upm y que no lo tenga ya otro usuario existente.
+    public static String comprobarCorreo(Scanner teclado, Cliente[] listaClientes) {
 
         boolean correoInvalido = true;
         String correo;
 
         do {
             correo = teclado.next();
-            if (correo.contains("@alumnos.upm.es") || correo.contains("@upm.es")) correoInvalido = false;
-            else {
-                System.out.println("Tu correo no es válido, vuelve a intentarlo con tu correo UPM:");
+            if (correo.contains("@alumnos.upm.es") || correo.contains("@upm.es")) {
+                if (Cliente.buscarPorCorreo(listaClientes, correo) == null) correoInvalido = false;
+                else System.out.println("Ya existe un usuario registrado con esa dirección de correo. Intente de nuevo");
             }
+            else System.out.println("Tu correo no es válido, vuelve a intentarlo con tu correo UPM:");
+
 
         } while(correoInvalido);
         return correo;
@@ -128,4 +127,29 @@ public class Cliente {
         } while(dniIncorrecto);
         return dni + letraDni;
     }
+
+    public static Cliente buscarPorDNI(Cliente[] listaClientes, String DNI){
+        int i = 0;
+        Cliente cliente = null;
+        while (i<listaClientes.length && cliente == null){
+            if (listaClientes[i].getDni().equals(DNI)) cliente = listaClientes[i];
+            i++;
+        }
+        return cliente;
+    }
+
+    //Se puede optimizar y que no recorra_todo el array siempre cuando se encuentra un null
+    //Esta función devuelve el cliente en caso de coincidir el correo y null en caso de que no exista.
+    public static Cliente buscarPorCorreo(Cliente[] listaClientes, String correo){
+        int i = 0;
+        Cliente cliente = null;
+        while (i<listaClientes.length && cliente == null){
+            if (listaClientes[i] != null){
+                if (listaClientes[i].getCorreo().equals(correo)) cliente = listaClientes[i];
+            }
+            i++;
+        }
+        return cliente;
+    }
+
 }

@@ -2,7 +2,9 @@ package com.company;
 
 import java.util.Scanner;
 
-public class Main {
+import static java.lang.Integer.parseInt;
+
+public class UPMBank {
 
     /*
     EL PROYECTO TENDRÁ LAS SIGUIENTES CLASES ADEMÁS DE LA MAIN:
@@ -11,20 +13,14 @@ public class Main {
     -CUENTAS (INTERCONECTAA CON CLIENTES)(UTILIZARÁ TAMBIÉN CLASES INGRESO, RETIRADA, PRESTAMO, TRANSFERENCIA)
     */
 
-    static Scanner teclado = new Scanner(System.in);
-
-    static String nombre="", apellidos="", correo="", fechaNacimiento="", tipoDeCuenta="", codigoSucursal, codigoEntidad, digitosCuentaString;
-    static String numeroDeCuenta="", dniCompleto="";
-    static long digitosCuenta;
-    static int digitoControl1, digitoControl2, numeroTipoDeCuenta, menuCuentas, cuentaDestinoTransferencia=0, anosPrestamo = 0;
+    static int menuCuentas, cuentaDestinoTransferencia=0, anosPrestamo = 0;
     static double dineroInicial = 0.0, dineroAIngresar=0.0, dineroARetirar=0.0, dineroATransferir, dineroEnCuenta = 0.0;
     static boolean usuarioCreado = false, cuentaCreada = false, depositoRealizado = false, retiroRealizado = false, transferenciaReaizada = false, prestamoRealizado = false;
     static double capitalPrestamo = 0.0, interesAnual = 0;
     static boolean entradaIncorrecta = true;
-    Cliente clienteActual;
 
 
-    public static int escribirMenu() {
+    public static int escribirMenu(Scanner teclado) {
         System.out.println("Bienvenido a tu app de UPMBank. Selecciona el número del trámite que deseas realizar.");
         System.out.println("1. Darse de alta");
         System.out.println("2. Crear una cuenta bancaria");
@@ -37,7 +33,8 @@ public class Main {
         return teclado.nextInt();
     }
 
-    public static void finalizarOpcion(){
+    //Función que pregunta al usuario si desea repetir la ejecución del programa o cerrr la apliciación.
+    public static void finalizarOpcion(Scanner teclado){
 
         int respuesta;
         boolean respuestaIncorrecta = false;
@@ -53,7 +50,8 @@ public class Main {
         } while(respuestaIncorrecta);
     }
 
-    public static int comprobarEntradaNumerica(int numero1, int numero2) {
+    //Función que lee una entrada del teclado y comprueba que está entre 2 valores.
+    public static int comprobarEntradaNumerica(Scanner teclado, int numero1, int numero2) {
         //numero1 debe ser < numero2
         int numeroUsuario;
         boolean numeroCorrecto = false;
@@ -68,7 +66,10 @@ public class Main {
         return numeroUsuario;
     }
 
-    public static Cliente ejecutarCase1() {
+    public static Cliente darDeAlta(Scanner teclado, Cliente[] listaClientes) {
+        String nombre, apellidos, correo, fechaNacimiento, dniCompleto;
+
+        //Recoger datos del usuario
         teclado.nextLine();
         System.out.println("Introduce tu nombre: ");
         nombre = teclado.nextLine();
@@ -78,55 +79,57 @@ public class Main {
         System.out.println("Hola " + nombre + " " + apellidos);
 
         System.out.println("Introduce tu correo:");
-        correo = Cliente.comprobarCorreo(teclado);
+        correo = Cliente.comprobarCorreo(teclado, listaClientes);
 
         System.out.println("Introduce tu fecha de nacimiento: formato (dd/mm/aaaa)");
         fechaNacimiento = Cliente.comprobarFecha(teclado);
 
         dniCompleto = Cliente.comprobarDni(teclado);
 
-        int maximoClientes = 20;
-        Cliente[] listaClientes = new Cliente[maximoClientes];
-        int numeroClientes = 0;
 
+        //Creación del cliente
         Cliente cliente = new Cliente(nombre, apellidos, correo, dniCompleto, fechaNacimiento);
-        listaClientes[numeroClientes] = cliente;
-        Cliente clienteActual = listaClientes[numeroClientes];
-        numeroClientes++;
 
         System.out.println("Perfecto, ya estás registrado en UPMBank.");
-        usuarioCreado = true;
 
-        return clienteActual;
+        return cliente;
     }
 
-    public static void ejecutarCase2() {
+    public static Cuenta crearCuentaBancaria(Scanner teclado, Cliente[] listaClientes) {
+
+        String tipoDeCuenta="", codigoSucursal, codigoEntidad, digitosCuentaString, numeroDeCuenta="";
+        long digitosCuenta;
+        int digitoControl1, digitoControl2;
+
+        //Se genera el número de cuenta y se recoge el tipo deseado
         System.out.println("Seleccione el tipo de cuenta que desea crear:");
         System.out.println("1. Corriente");
         System.out.println("2. Ahorro");
         System.out.println("3. Remunerada");
-        numeroTipoDeCuenta = comprobarEntradaNumerica(1,3);
-        tipoDeCuenta = CrearCuentaBancaria.comprobarTipoDeCuenta(numeroTipoDeCuenta);
+        tipoDeCuenta = Cuenta.comprobarTipoDeCuenta(teclado);
 
         codigoEntidad = "9010";
         codigoSucursal = "0201";
         digitosCuenta =  (long)(Math.random() * 10000000000L);
         digitosCuentaString = Long.toString(digitosCuenta);
 
-        digitoControl1 = CrearCuentaBancaria.generarDigitoControl1(codigoEntidad, codigoSucursal);
-        digitoControl2 = CrearCuentaBancaria.generarDigitoControl2(digitosCuentaString);
+        digitoControl1 = Cuenta.generarDigitoControl1(codigoEntidad, codigoSucursal);
+        digitoControl2 = Cuenta.generarDigitoControl2(digitosCuentaString);
 
         numeroDeCuenta = codigoEntidad + codigoSucursal + digitoControl1 + digitoControl2 + digitosCuentaString;
 
-        System.out.println("Tu cuenta se ha creado correctamente:");
-        System.out.println("Tipo de cuenta: " + tipoDeCuenta);
-        System.out.println("Numero de cuenta: " + numeroDeCuenta);
-        System.out.println("Saldo en la cuenta: " + dineroInicial + "€");
+        //Se muestra por pantalla y se crea la cuenta.
+        Cuenta cuenta = new Cuenta(numeroDeCuenta, tipoDeCuenta);
 
-        cuentaCreada = true;
+        System.out.println("Tu cuenta se ha creado correctamente:");
+        System.out.println("Tipo de cuenta: " + cuenta.getTipoDeCuenta());
+        System.out.println("Numero de cuenta: " + cuenta.getNumero());
+        System.out.println("Saldo en la cuenta: " + cuenta.getSaldo() + "€");
+
+        return cuenta;
     }
 
-    public static void ejecutarCase3() {
+    public static void hacerDeposito(Scanner teclado) {
         System.out.println("Qué cantidad desea ingresar? Introduzca únicamente el valor numérico del depósito en euros.");
         dineroAIngresar = teclado.nextDouble();
 
@@ -136,7 +139,7 @@ public class Main {
         depositoRealizado = true;
     }
 
-    public static void ejecutarCase4() {
+    public static void hacerRetiro(Scanner teclado) {
         System.out.println("Qué cantidad desea retirar? Introduzca únicamente el valor numérico del depósito en euros.");
         dineroARetirar = teclado.nextDouble();
 
@@ -149,7 +152,7 @@ public class Main {
         retiroRealizado = true;
     }
 
-    public static void ejecutarCase5() {
+    public static void hacerTransferencia(Scanner teclado) {
         System.out.println("Introduzca el número de la cuenta destino:");
         cuentaDestinoTransferencia = teclado.nextInt();
         System.out.println("Qué cantidad desea transferir? Introduzca únicamente el valor numérico del depósito en euros.");
@@ -164,7 +167,7 @@ public class Main {
         transferenciaReaizada = true;
     }
 
-    public static void ejecutarCase6() {
+    public static void solicitarPrestamo(Scanner teclado) {
         System.out.println("Introduzca su número de cuenta:");
         teclado.next();
 
@@ -186,8 +189,9 @@ public class Main {
         prestamoRealizado = true;
     }
 
-    public static void ejecutarCase7(Cliente cliente) {
-        if (usuarioCreado) {
+    public static void mostrarDatos(Cliente cliente) {
+
+        if (cliente != null) {
             System.out.println("Hola " + cliente.getNombre() + " " + cliente.getApellidos());
             System.out.println("Estos son los datos de tu cuenta: \n");
             System.out.println("DNI: " + cliente.getDni());
@@ -195,14 +199,17 @@ public class Main {
             System.out.println("Fecha de Nacimiento: " + cliente.getFechaNacimiento());
             System.out.println();
 
-            if (cuentaCreada) {
+            if (cliente.getListaCuentas()[0] != null) {
                 System.out.println("Estas son las cuentas que tiene creadas en su cuenta: \n");
-                System.out.println("1. Cuenta Nº : " + numeroDeCuenta);
-                System.out.println("Tipo: " + tipoDeCuenta);
-                System.out.println("Saldo actual: "+ dineroEnCuenta + "€");
+                for(int i = 0; i < cliente.getNumeroDeCuentas(); i++) {
+                    int numeroMenu = i+1;
+                    System.out.println(numeroMenu + ". Cuenta Nº : " + cliente.getListaCuentas()[i].getNumero());
+                    System.out.println("Tipo: " + cliente.getListaCuentas()[i].getTipoDeCuenta());
+                    System.out.println("Saldo actual: " + cliente.getListaCuentas()[i].getSaldo() + "€");
+                }
 
                 System.out.println("Seleccione una cuenta para ver sus transacciones con ella. Si no, pulse 0 para salir.");
-                menuCuentas = comprobarEntradaNumerica(0,1);
+                menuCuentas =1;
                 if (menuCuentas == 1) {
                     if (depositoRealizado) System.out.println("Depósito de " + dineroAIngresar + "€");
                     if (retiroRealizado) System.out.println("Retiro de " + dineroARetirar + "€");
@@ -210,14 +217,20 @@ public class Main {
                     if (prestamoRealizado) System.out.println("Préstamo activo de " + capitalPrestamo + "€ a " + interesAnual*100 + "% de interés anual por " + anosPrestamo + " años.");
                 }
             } else System.out.println("No existe ninguna cuenta bancaria para este usuario. Si desea crear una, seleccione la opción 2 del menú principal.");
-        } else System.out.println("No existe ningún usuario registrado en el sistema. Por favor, asegúrese de darse de alta previamente");
+        } else System.out.println("No existe ningún usuario registrado en el sistema con esas credenciales. Por favor, asegúrese de estar dado de alta en UPMBank.");
 
     }
 
     public static void main(String[] args) {
-        Cliente clienteActual = null;
+
+        Scanner teclado = new Scanner(System.in);
+        //Creación array que contiene la lista de clientes
+        int maximoClientes = 20;
+        Cliente[] listaClientes = new Cliente[maximoClientes];
+        int numeroClientes = 0;
+
         do {
-            int numeroMenu = escribirMenu();
+            int numeroMenu = escribirMenu(teclado);
             switch (numeroMenu) {
 
                 case 0:
@@ -225,38 +238,59 @@ public class Main {
                     break;
 
                 case 1:
-                    clienteActual = ejecutarCase1();
-                    finalizarOpcion();
+                    if (numeroClientes < maximoClientes) {
+                        Cliente cliente = darDeAlta(teclado, listaClientes);
+                        listaClientes[numeroClientes] = cliente;
+                        numeroClientes++;
+                    }
+                    else System.out.println("La aplicación ha llegado al límite de usuarios que puede almacenar");
+                    finalizarOpcion(teclado);
                     break;
 
                 case 2:
-                    ejecutarCase2();
-                    finalizarOpcion();
+                    //Se pide el correo del usuario y se trae al cliente con dicho usuario
+                    System.out.println("Introduce tu correo:");
+                    String correo = teclado.next();
+                    Cliente cliente = Cliente.buscarPorCorreo(listaClientes, correo);
+
+                    if (cliente != null) {
+                        //Se crea la cuenta
+                        Cuenta cuenta = crearCuentaBancaria(teclado, listaClientes);
+
+                        //Asignas la cuenta al usuario deseado y aumentas el número de cuentas que ese usuario tiene.
+                        cuenta.asignarAUsuario(cliente, cuenta);
+                        cliente.setNumeroDeCuentas(cliente.getNumeroDeCuentas() + 1);
+                    } else System.out.println("No existe ningún usuario registrado con ese correo.");
+
+                    finalizarOpcion(teclado);
                     break;
 
                 case 3:
-                    ejecutarCase3();
-                    finalizarOpcion();
+                    hacerDeposito(teclado);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 4:
-                    ejecutarCase4();
-                    finalizarOpcion();
+                    hacerRetiro(teclado);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 5:
-                    ejecutarCase5();
-                    finalizarOpcion();
+                    hacerTransferencia(teclado);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 6:
-                    ejecutarCase6();
-                    finalizarOpcion();
+                    solicitarPrestamo(teclado);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 7:
-                    ejecutarCase7(clienteActual);
-                    finalizarOpcion();
+                    System.out.println("Introduce tu correo:");
+                    correo = teclado.next();
+                    cliente = Cliente.buscarPorCorreo(listaClientes, correo);
+                    mostrarDatos(cliente);
+                    finalizarOpcion(teclado);
                     break;
 
                 default:

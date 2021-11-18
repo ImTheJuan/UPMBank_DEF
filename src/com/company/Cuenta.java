@@ -2,21 +2,48 @@ package com.company;
 
 import java.util.Scanner;
 
-public class CrearCuentaBancaria {
+public class Cuenta {
+    final private String numero;
+    final private String tipoDeCuenta;
+    private int saldo;
 
-    static Scanner teclado = new Scanner(System.in);
+    public Cuenta(String numero, String tipoDeCuenta){
+        this.numero = numero;
+        this.tipoDeCuenta = tipoDeCuenta;
+        this.saldo = 0;
+    }
 
-    public static String comprobarTipoDeCuenta(int numeroTipoDeCuenta) {
+    public String getNumero() {
+        return numero;
+    }
 
+    public String getTipoDeCuenta() {
+        return tipoDeCuenta;
+    }
+
+    public int getSaldo() {
+        return saldo;
+    }
+
+    public void setSaldo(int saldo) {
+        this.saldo = saldo;
+    }
+
+    //La función se encarga de leer un número por teclado entre 1 y 3 y relacionarlo con un tipo de cuenta posible.
+    public static String comprobarTipoDeCuenta(Scanner teclado) {
+
+        int numero;
+        boolean numeroCorrecto = false;
         String tipoDeCuenta = "";
-        boolean tipoDeCuentaIncorrecto = false;
-
         do {
-            if (numeroTipoDeCuenta == 1) tipoDeCuenta = "Corriente";
-            else if (numeroTipoDeCuenta == 2) tipoDeCuenta = "Ahorro";
-            else if (numeroTipoDeCuenta == 3) tipoDeCuenta = "Remunerada";
-            else tipoDeCuentaIncorrecto = true;
-        } while (tipoDeCuentaIncorrecto);
+            numero = teclado.nextInt();
+            if ((numero >= 1) && (numero <= 3)) numeroCorrecto = true;
+            else System.out.println("Opción incorrecta, intente de nuevo");
+        } while(!numeroCorrecto);
+
+        if (numero == 1) tipoDeCuenta = "Corriente";
+        else if (numero == 2) tipoDeCuenta = "Ahorro";
+        else tipoDeCuenta = "Remunerada";
 
         return tipoDeCuenta;
     }
@@ -63,5 +90,10 @@ public class CrearCuentaBancaria {
         return digitoControl2;
     }
 
+    //La función introduce una cuenta en la lista de cuentas perteneciente alcliente que se quiere
+    //¿Vale la pena hacer una funcion de esto?
+    public void asignarAUsuario(Cliente cliente, Cuenta cuenta){
 
+        cliente.getListaCuentas()[cliente.getNumeroDeCuentas()] = cuenta;
+    }
 }
