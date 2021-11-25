@@ -152,4 +152,61 @@ public class Cliente {
         return cliente;
     }
 
+    public static Cliente crearCliente(Scanner teclado, Cliente[] listaClientes) {
+        String nombre, apellidos, correo, fechaNacimiento, dniCompleto;
+
+        //Recoger datos del usuario
+        teclado.nextLine();
+        System.out.println("Introduce tu nombre: ");
+        nombre = teclado.nextLine();
+
+        System.out.println("Introduce tus apellidos: ");
+        apellidos = teclado.nextLine();
+        System.out.println("Hola " + nombre + " " + apellidos);
+
+        System.out.println("Introduce tu correo:");
+        correo = comprobarCorreo(teclado, listaClientes);
+
+        System.out.println("Introduce tu fecha de nacimiento: formato (dd/mm/aaaa)");
+        fechaNacimiento = comprobarFecha(teclado);
+
+        dniCompleto = comprobarDni(teclado);
+
+
+        //Creación del cliente
+        Cliente cliente = new Cliente(nombre, apellidos, correo, dniCompleto, fechaNacimiento);
+
+        System.out.println("Perfecto, ya estás registrado en UPMBank.");
+
+        return cliente;
+    }
+
+    public void mostrarDatos() {
+
+        System.out.println("Hola " + this.getNombre() + " " + this.getApellidos());
+        System.out.println("Estos son los datos de tu cuenta: \n");
+        System.out.println("DNI: " + this.getDni());
+        System.out.println("Correo electrónico: " + this.getCorreo());
+        System.out.println("Fecha de Nacimiento: " + this.getFechaNacimiento());
+        System.out.println();
+
+        if (this.getListaCuentas()[0] != null) {
+            System.out.println("Estas son las cuentas que tiene creadas en su cuenta: \n");
+            for(int i = 0; i < this.getNumeroDeCuentas(); i++) {
+                int numeroMenu = i+1;
+                System.out.println(numeroMenu + ". Cuenta Nº : " + this.getListaCuentas()[i].getNumero());
+                System.out.println("Tipo: " + this.getListaCuentas()[i].getTipoDeCuenta());
+                System.out.println("Saldo actual: " + this.getListaCuentas()[i].getSaldo() + "€");
+            }
+            /*
+            System.out.println("Seleccione una cuenta para ver sus transacciones con ella. Si no, pulse 0 para salir.");
+            menuCuentas =1;
+            if (menuCuentas == 1) {
+                if (depositoRealizado) System.out.println("Depósito de " + dineroAIngresar + "€");
+                if (retiroRealizado) System.out.println("Retiro de " + dineroARetirar + "€");
+                if (transferenciaReaizada) System.out.println("Transferencia de " + dineroAIngresar + "€ a la cuenta " + cuentaDestinoTransferencia);
+                if (prestamoRealizado) System.out.println("Préstamo activo de " + capitalPrestamo + "€ a " + interesAnual*100 + "% de interés anual por " + anosPrestamo + " años.");
+            }*/
+        } else System.out.println("No existe ninguna cuenta bancaria para este usuario. Si desea crear una, seleccione la opción 2 del menú principal.");
+    }
 }
