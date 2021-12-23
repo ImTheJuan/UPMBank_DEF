@@ -6,48 +6,59 @@ public class Cuenta {
     final private static String CODIGO_SUCURSAL = "9010";
     final private static String CODIGO_ENTIDAD = "0201";
     final private String NUMERO;
-    final private String TIPODECUENTA;
-    private int saldo;
-    private Transferencia[] listaTransferencias;
+    final private TipoDeCuenta TIPO_DE_CUENTA;
+    private double saldo;
+    private ListaMovimientos listaMovimientos;
+    private ListaTransferencias listaTransferencias;
 
-    public Cuenta(String numero, String tipoDeCuenta){
-        this.NUMERO = numero;
-        this.TIPODECUENTA = tipoDeCuenta;
-        this.saldo = 0;
-        this.listaTransferencias = new Transferencia[50];
+    public Cuenta(String numero, TipoDeCuenta tipoDeCuenta){
+        NUMERO = numero;
+        TIPO_DE_CUENTA = tipoDeCuenta;
+        saldo = 0;
+        listaTransferencias = new ListaTransferencias(20);
+        listaMovimientos = new ListaMovimientos(20);
     }
 
     public String getNumero() {
         return NUMERO;
     }
 
-    public String getTipoDeCuenta() {
-        return TIPODECUENTA;
+    public TipoDeCuenta getTipoDeCuenta() {
+        return TIPO_DE_CUENTA;
     }
 
-    public int getSaldo() {
+    public double getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(int saldo) {
+    public void setSaldo(double saldo) {
         this.saldo = saldo;
     }
 
+    public ListaMovimientos getListaMovimientos() {
+        return listaMovimientos;
+    }
+
+    public ListaTransferencias getListaTransferencias() {
+        return listaTransferencias;
+    }
+
     //La función se encarga de leer un número por teclado entre 1 y 3 y relacionarlo con un tipo de cuenta posible.
-    public static String comprobarTipoDeCuenta(Scanner teclado) {
+    enum TipoDeCuenta {CORRIENTE, AHORRO, REMUNERADA}
+    public static TipoDeCuenta comprobarTipoDeCuenta(Scanner teclado) {
 
         int numero;
         boolean numeroCorrecto = false;
-        String tipoDeCuenta = "";
+        TipoDeCuenta tipoDeCuenta;
         do {
             numero = teclado.nextInt();
             if ((numero >= 1) && (numero <= 3)) numeroCorrecto = true;
             else System.out.println("Opción incorrecta, intente de nuevo");
         } while(!numeroCorrecto);
 
-        if (numero == 1) tipoDeCuenta = "Corriente";
-        else if (numero == 2) tipoDeCuenta = "Ahorro";
-        else tipoDeCuenta = "Remunerada";
+        if (numero == 1) tipoDeCuenta = TipoDeCuenta.CORRIENTE;
+        else if (numero == 2) tipoDeCuenta = TipoDeCuenta.AHORRO;
+        else tipoDeCuenta = TipoDeCuenta.REMUNERADA;
 
         return tipoDeCuenta;
     }
@@ -94,11 +105,12 @@ public class Cuenta {
         return digitoControl2;
     }
 
-    public static Cuenta crearCuenta(Scanner teclado) {
+    public static Cuenta crearCuenta(Scanner teclado, ListaCuentas listaCuentas) {
 
-        String tipoDeCuenta="", digitosCuentaString, numeroDeCuenta="";
+        String digitosCuentaString, numeroDeCuenta="";
         long digitosCuenta;
         int digitoControl1, digitoControl2;
+        TipoDeCuenta tipoDeCuenta;
 
         //Se genera el número de cuenta y se recoge el tipo deseado
         System.out.println("Seleccione el tipo de cuenta que desea crear:");
@@ -107,30 +119,41 @@ public class Cuenta {
         System.out.println("3. Remunerada");
         tipoDeCuenta = Cuenta.comprobarTipoDeCuenta(teclado);
 
-        digitosCuenta =  (long)(Math.random() * 10000000000L);
-        digitosCuentaString = Long.toString(digitosCuenta);
+        //Se comprueba que el número de la cuenta sea único
+        do {
+            digitosCuenta = (long) (Math.random() * 10000000000L);
+            digitosCuentaString = Long.toString(digitosCuenta);
 
-        digitoControl1 = Cuenta.generarDigitoControl1();
-        digitoControl2 = Cuenta.generarDigitoControl2(digitosCuentaString);
+            digitoControl1 = Cuenta.generarDigitoControl1();
+            digitoControl2 = Cuenta.generarDigitoControl2(digitosCuentaString);
 
-        numeroDeCuenta = CODIGO_ENTIDAD + CODIGO_SUCURSAL + digitoControl1 + digitoControl2 + digitosCuentaString;
+            numeroDeCuenta = CODIGO_ENTIDAD + CODIGO_SUCURSAL + digitoControl1 + digitoControl2 + digitosCuentaString;
+        } while(Cuenta.buscarPorNumero(listaCuentas.getLista(), numeroDeCuenta) != null);
 
         //Se crea la cuenta.
         Cuenta cuenta = new Cuenta(numeroDeCuenta, tipoDeCuenta);
 
+        System.out.println("Tu cuenta se ha creado exitosamente.");
+
         return cuenta;
     }
 
-    public void mostrarCuenta(){
-        System.out.println("Tu cuenta se ha creado correctamente:");
-        System.out.println("Tipo de cuenta: " + this.getTipoDeCuenta());
+    public void imprimir(){
         System.out.println("Numero de cuenta: " + this.getNumero());
+        System.out.println("Tipo de cuenta: " + this.getTipoDeCuenta());
         System.out.println("Saldo en la cuenta: " + this.getSaldo() + "€");
     }
-    //La función introduce una cuenta en la lista de cuentas perteneciente alcliente que se quiere
-    //¿Vale la pena hacer una funcion de esto?
-    public void asignarAUsuario(Cliente cliente){
 
-        cliente.getListaCuentas()[cliente.getNumeroDeCuentas()] = this;
+    //Busca una cuenta a partir de su número
+    public static Cuenta buscarPorNumero(Cuenta[] listaCuentas, String numero){
+        int i = 0;
+        Cuenta cuenta = null;
+        while (i<listaCuentas.length && cuenta == null){
+            if (listaCuentas[i] != null){
+                if (listaCuentas[i].getNumero().equals(numero)) cuenta = listaCuentas[i];
+            }
+            i++;
+        }
+        return cuenta;
     }
 }

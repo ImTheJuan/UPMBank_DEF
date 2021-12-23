@@ -9,8 +9,7 @@ public class Cliente {
     final private String correo;
     final private String dni;
     final private String fechaNacimiento;
-    final private Cuenta[] listaCuentas;
-    private int numeroDeCuentas;
+    final private ListaCuentas listaCuentas;
 
     public Cliente(String nombre, String apellidos, String correo, String dni, String fechaNacimiento) {
         this.nombre = nombre;
@@ -18,8 +17,7 @@ public class Cliente {
         this.correo = correo;
         this.dni = dni;
         this.fechaNacimiento = fechaNacimiento;
-        this.listaCuentas = new Cuenta[10];
-        this.numeroDeCuentas = 0;
+        this.listaCuentas = new ListaCuentas(10);
     }
 
     public String getNombre() {
@@ -42,20 +40,12 @@ public class Cliente {
         return fechaNacimiento;
     }
 
-    public Cuenta[] getListaCuentas() {
+    public ListaCuentas getListaCuentas() {
         return listaCuentas;
     }
 
-    public int getNumeroDeCuentas() {
-        return numeroDeCuentas;
-    }
-
-    public void setNumeroDeCuentas(int numeroDeCuentas) {
-        this.numeroDeCuentas = numeroDeCuentas;
-    }
-
     //Función que comprueba que el correo pertenezca a la upm y que no lo tenga ya otro usuario existente.
-    public static String comprobarCorreo(Scanner teclado, Cliente[] listaClientes) {
+    public static String comprobarCorreo(Scanner teclado, ListaClientes listaClientes) {
 
         boolean correoInvalido = true;
         String correo;
@@ -63,7 +53,7 @@ public class Cliente {
         do {
             correo = teclado.next();
             if (correo.contains("@alumnos.upm.es") || correo.contains("@upm.es")) {
-                if (Cliente.buscarPorCorreo(listaClientes, correo) == null) correoInvalido = false;
+                if (Cliente.buscarPorCorreo(listaClientes.getLista(), correo) == null) correoInvalido = false;
                 else System.out.println("Ya existe un usuario registrado con esa dirección de correo. Intente de nuevo");
             }
             else System.out.println("Tu correo no es válido, vuelve a intentarlo con tu correo UPM:");
@@ -104,8 +94,7 @@ public class Cliente {
         return fechaNacimiento;
     }
 
-    public static String comprobarDni(Scanner teclado) {
-
+    public static String comprobarDni(Scanner teclado, ListaClientes listaClientes) {
         int moduloDni;
         int dni;
         String letraDni;
@@ -116,16 +105,21 @@ public class Cliente {
             dni = teclado.nextInt();
             System.out.println("Introduce la letra de tu DNI:");
             letraDni = teclado.next();
-
-            String[] comprobacionLetras = new String[]{"T", "R", "W", "A", "G", "M", "Y", "F", "P", "D", "X", "B", "N", "J", "Z", "S", "Q", "V", "H", "L", "C", "K", "E"};
+            char[] comprobacionLetras = new char[]{'T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F', 'P', 'D', 'X', 'B', 'N', 'J',
+                    'Z', 'S', 'Q', 'V', 'H', 'L', 'C', 'K', 'E'};
             moduloDni = dni % 23;
-            boolean esLetraIgualAComprobacion = Objects.equals(letraDni, comprobacionLetras[moduloDni]);
-            if (!(esLetraIgualAComprobacion && (dni%10000000 != dni))) {
-                System.out.println("Tu DNI es incorrecto. Intenta nuevamente");
+            String dniCompleto = dni + letraDni;
+            boolean esLetraIgualAComprobacion = Objects.equals(letraDni.charAt(0), comprobacionLetras[moduloDni]);
+            if (esLetraIgualAComprobacion && (dni%10000000 != dni)) {
+                {
+                    if (Cliente.buscarPorDNI(listaClientes.getLista(), dniCompleto) == null) dniIncorrecto = false;
+                    else System.out.println("Ya existe un usuario registrado con este DNI");
+                }
             }
-            else dniIncorrecto = false;
+            else System.out.println("Tu DNI es incorrecto. Intenta nuevamente");
         } while(dniIncorrecto);
         return dni + letraDni;
+
     }
 
     public static Cliente buscarPorDNI(Cliente[] listaClientes, String DNI){
@@ -152,7 +146,7 @@ public class Cliente {
         return cliente;
     }
 
-    public static Cliente crearCliente(Scanner teclado, Cliente[] listaClientes) {
+    public static Cliente crearCliente(Scanner teclado, ListaClientes listaClientes) {
         String nombre, apellidos, correo, fechaNacimiento, dniCompleto;
 
         //Recoger datos del usuario
@@ -165,12 +159,12 @@ public class Cliente {
         System.out.println("Hola " + nombre + " " + apellidos);
 
         System.out.println("Introduce tu correo:");
-        correo = comprobarCorreo(teclado, listaClientes);
+        correo = Cliente.comprobarCorreo(teclado, listaClientes);
 
         System.out.println("Introduce tu fecha de nacimiento: formato (dd/mm/aaaa)");
         fechaNacimiento = comprobarFecha(teclado);
 
-        dniCompleto = comprobarDni(teclado);
+        dniCompleto = comprobarDni(teclado, listaClientes);
 
 
         //Creación del cliente
@@ -181,8 +175,9 @@ public class Cliente {
         return cliente;
     }
 
-    public void mostrarDatos() {
+    public void imprimir() {
 
+        //Muestra los datos del cliente
         System.out.println("Hola " + this.getNombre() + " " + this.getApellidos());
         System.out.println("Estos son los datos de tu cuenta: \n");
         System.out.println("DNI: " + this.getDni());
@@ -190,23 +185,27 @@ public class Cliente {
         System.out.println("Fecha de Nacimiento: " + this.getFechaNacimiento());
         System.out.println();
 
-        if (this.getListaCuentas()[0] != null) {
-            System.out.println("Estas son las cuentas que tiene creadas en su cuenta: \n");
-            for(int i = 0; i < this.getNumeroDeCuentas(); i++) {
-                int numeroMenu = i+1;
-                System.out.println(numeroMenu + ". Cuenta Nº : " + this.getListaCuentas()[i].getNumero());
-                System.out.println("Tipo: " + this.getListaCuentas()[i].getTipoDeCuenta());
-                System.out.println("Saldo actual: " + this.getListaCuentas()[i].getSaldo() + "€");
+        //Muestra las cuentas del cliente (siempre que tenga)
+        if (this.getListaCuentas().getLista()[0] != null) {
+            for (int i = 0; i < this.getListaCuentas().getNumeroCuentas(); i++) {
+                int numeroOrden = i+1;
+                System.out.print(numeroOrden + ". ");
+                this.getListaCuentas().getLista()[i].imprimir();
+
+                //Muestra las operaciones (depósitos y extracciones) de cada cuenta del cliente
+                if (this.getListaCuentas().getLista()[i].getListaMovimientos().getLista()[0] != null) {
+                    for (int j = 0; j < this.getListaCuentas().getLista()[i].getListaMovimientos().getOcupacion(); j++) {
+                        this.getListaCuentas().getLista()[i].getListaMovimientos().getLista()[j].imprimir();
+                    }
+                }
+                //Muestra las transferencias de cada cuenta del cliente
+                if (this.getListaCuentas().getLista()[i].getListaTransferencias().getLista()[0] != null) {
+                    for (int j = 0; j < this.getListaCuentas().getLista()[i].getListaTransferencias().getOcupacion(); j++) {
+                        this.getListaCuentas().getLista()[i].getListaTransferencias().getLista()[j].imprimir();
+                    }
+                }
             }
-            /*
-            System.out.println("Seleccione una cuenta para ver sus transacciones con ella. Si no, pulse 0 para salir.");
-            menuCuentas =1;
-            if (menuCuentas == 1) {
-                if (depositoRealizado) System.out.println("Depósito de " + dineroAIngresar + "€");
-                if (retiroRealizado) System.out.println("Retiro de " + dineroARetirar + "€");
-                if (transferenciaReaizada) System.out.println("Transferencia de " + dineroAIngresar + "€ a la cuenta " + cuentaDestinoTransferencia);
-                if (prestamoRealizado) System.out.println("Préstamo activo de " + capitalPrestamo + "€ a " + interesAnual*100 + "% de interés anual por " + anosPrestamo + " años.");
-            }*/
-        } else System.out.println("No existe ninguna cuenta bancaria para este usuario. Si desea crear una, seleccione la opción 2 del menú principal.");
+        }
+        else System.out.println("No tienes ninguna cuenta todavía. Puedes crear alguna desde el menú principal.");
     }
 }

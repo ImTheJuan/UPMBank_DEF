@@ -5,25 +5,55 @@ import java.util.Scanner;
 public class UPMBank {
 
     /*
-    EL PROYECTO TENDRÁ LAS SIGUIENTES CLASES ADEMÁS DE LA MAIN:
-    -MENUS (METODOS ESTATICOS CON FUNCIONES BASICAS DE LA APP)
-    -CLIENTE (UTILIZARÁ LAS CLASES FECHA Y DNI A SU VEZ)
-    -CUENTAS (INTERCONECTAA CON CLIENTES)(UTILIZARÁ TAMBIÉN CLASES INGRESO, RETIRADA, PRESTAMO, TRANSFERENCIA)
-    */
+    Lee del fichero
+    public static void main(String[] args) throws IOException {
+        FileReader fr = new FileReader("ejemplo.txt");
+        BufferedReader br = new BufferedReader(fr);
+        String texto = br.readLine();
+        br.close();
+        fr.close();
+        (utilizar String.indexOf() y String.substring())
+        (mas facil String.split(separador) funcion que devuelve un array con las distintas divisiones)
+     */
 
-    static int cuentaDestinoTransferencia=0, anosPrestamo = 0;
-    static double dineroAIngresar=0.0, dineroARetirar=0.0, dineroATransferir, dineroEnCuenta = 0.0;
-    static boolean depositoRealizado = false, retiroRealizado = false, transferenciaReaizada = false, prestamoRealizado = false;
-    static double capitalPrestamo = 0.0, interesAnual = 0;
-    static boolean entradaIncorrecta = true;
+    /*
+    Escribe en fichero
+    public static void main(String[] args) throws IOException {
+        FileWriter fw = new FileWriter("ejemplo.txt");
+        BufferedWriter bw = new BufferedWriter(fw);
+        bw.¿writeLine?("texto");
+        bw.flush();
+        bw.close();
+        fw.close();
+        (utilizar String.indexOf() y String.substring())
+
+         String ruta = new String("Ficheros\\");
+         File fichtexto = new File(ruta, "Personas.csv");
+         FileOutputStream flujoSalida = new FileOutputStream(fichtexto);
+         Printwriter fSalida = new PrintWriter(flujoSalida);
+         fSalida.print("");
+         fSalida.flush();
+         fSalida.close();
+
+     */
+    static int anosPrestamo = 0;
+    static double capitalPrestamo = 0.0, interesAnual = 0, dineroEnCuenta = 0.0;
 
     public static void main(String[] args) {
 
+        boolean entradaIncorrecta = true;
+
         Scanner teclado = new Scanner(System.in);
-        //Creación array que contiene la lista de clientes
-        int maximoClientes = 20;
-        Cliente[] listaClientes = new Cliente[maximoClientes];
-        int numeroClientes = 0;
+
+        //Creación de la lista de clientes
+        ListaClientes listaClientes = new ListaClientes(20);
+
+        //Creación de la lista de todas las cuentas del banco
+        ListaCuentas listaCuentasGlobal = new ListaCuentas(400);
+
+        //Creacion de la lista de todas las transferencias del banco
+        ListaTransferencias listaTransferencias = new ListaTransferencias(1000);
+
 
         do {
             int numeroMenu = escribirMenu(teclado);
@@ -34,62 +64,98 @@ public class UPMBank {
                     break;
 
                 case 1:
-                    if (numeroClientes < maximoClientes) {
-                        Cliente cliente = Cliente.crearCliente(teclado, listaClientes);
-                        listaClientes[numeroClientes] = cliente;
-                        numeroClientes++;
-                    }
-                    else System.out.println("La aplicación ha llegado al límite de usuarios que puede almacenar");
-                    finalizarOpcion(teclado);
+                    //Se crea el ciente y se introduce en la lista de clientes del banco
+                    Cliente cliente = Cliente.crearCliente(teclado, listaClientes);
+                    listaClientes.insertarCliente(cliente);
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 2:
-                    //Se pide el correo del usuario y se trae al cliente con dicho usuario
-                    System.out.println("Introduce tu correo:");
-                    String correo = teclado.next();
-                    Cliente cliente = Cliente.buscarPorCorreo(listaClientes, correo);
+                    //Se pide el DNI del usuario y se trae al cliente con dicho DNI
+                    System.out.println("Introduce tu DNI:");
+                    String dni = teclado.next();
+                    cliente = Cliente.buscarPorDNI(listaClientes.getLista(), dni);
 
                     if (cliente != null) {
                         //Se crea la cuenta
-                        Cuenta cuenta = Cuenta.crearCuenta(teclado);
-                        cuenta.mostrarCuenta();
+                        Cuenta cuenta = Cuenta.crearCuenta(teclado, listaCuentasGlobal);
+                        cuenta.imprimir();
 
-                        //Asignas la cuenta al usuario deseado y aumentas el número de cuentas que ese usuario tiene.
-                        cuenta.asignarAUsuario(cliente);
-                        cliente.setNumeroDeCuentas(cliente.getNumeroDeCuentas() + 1);
-                    } else System.out.println("No existe ningún usuario registrado con ese correo.");
+                        //Se asigna la cuenta al usuario deseado y a la lista global
+                        cliente.getListaCuentas().insertarCuenta(cuenta);
+                        listaCuentasGlobal.insertarCuenta(cuenta);
+                    } else System.out.println("No existe ningún usuario registrado con ese DNI.");
 
-                    finalizarOpcion(teclado);
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 3:
-                    hacerDeposito(teclado);
-                    finalizarOpcion(teclado);
+                    Movimiento.crearMovimiento(teclado, "DEPOSITO", listaClientes);
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 4:
-                    hacerRetiro(teclado);
-                    finalizarOpcion(teclado);
+                    Movimiento.crearMovimiento(teclado, "RETIRO", listaClientes);
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 5:
-                    hacerTransferencia(teclado);
-                    finalizarOpcion(teclado);
+                    //Se pide el DNI del usuario y se trae al cliente con dicho DNI
+                    System.out.println("Introduce tu DNI:");
+                    dni = teclado.next();
+                    cliente = Cliente.buscarPorDNI(listaClientes.getLista(), dni);
+
+                    if (cliente != null) {
+                        if (cliente.getListaCuentas().getLista()[0] != null) {
+                            //Se muestran las cuentas del usuario y se le pide que seleccione una (cuenta origen)
+                            for (int i = 0; i < cliente.getListaCuentas().getNumeroCuentas(); i++) {
+                                int numeroOrden = i + 1;
+                                System.out.print(numeroOrden + ". ");
+                                cliente.getListaCuentas().getLista()[i].imprimir();
+                            }
+                            System.out.println("Seleccione la cuenta con la que desea reallizar la transferencia (1, 2, 3 ...):");
+                            int opcion = teclado.nextInt();
+                            Cuenta cuentaOrigen = cliente.getListaCuentas().getLista()[opcion - 1];
+
+                            //Se pide el numero de la cuenta destino
+                            System.out.println("Introduzca el número de la cuenta destino:");
+                            String numeroCuentaDestino = teclado.next();
+                            Cuenta cuentaDestino = Cuenta.buscarPorNumero(listaCuentasGlobal.getLista(), numeroCuentaDestino);
+
+                            //Se pide el valor a transferir
+                            System.out.println("Qué cantidad desea transferir? Introduzca únicamente el valor numérico del depósito en euros.");
+                            double dineroATransferir = teclado.nextDouble();
+
+                            //Se crea la transferencia
+                            Transferencia transferencia = Transferencia.hacerTransferencia(cuentaOrigen, cuentaDestino, dineroATransferir);
+
+                            //Se introduce en la lista de transferencias del banco y a la lista de la cuenta origen
+                            listaTransferencias.insertarTransferencia(transferencia);
+                            cuentaOrigen.getListaTransferencias().insertarTransferencia(transferencia);
+
+                        } else System.out.println("No tiene cuentas con las cuales operar. Por favor cree alguna en el menú principal.");
+                    } else System.out.println("No existe ningún usuario registrado con ese DNI.");
+
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 6:
                     solicitarPrestamo(teclado);
-                    finalizarOpcion(teclado);
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 case 7:
-                    System.out.println("Introduce tu correo:");
-                    correo = teclado.next();
-                    cliente = Cliente.buscarPorCorreo(listaClientes, correo);
-                    if (cliente != null) cliente.mostrarDatos();
+                    //Solicita el DNI del usuario y busca el cliente identificado con ese DNI.
+                    System.out.println("Introduce tu DNI:");
+                    dni = teclado.next();
+                    cliente = Cliente.buscarPorDNI(listaClientes.getLista(), dni);
+
+                   //Comprueba si el usuario existe y lo muestra en caso afirmativo.
+                    if (cliente != null) cliente.imprimir();
                     else System.out.println("No existe ningún usuario registrado en el sistema con esas credenciales. " +
                             "Por favor, asegúrese de estar dado de alta en UPMBank.");
-                    finalizarOpcion(teclado);
+
+                    finalizarOpcion(teclado, entradaIncorrecta);
                     break;
 
                 default:
@@ -112,8 +178,8 @@ public class UPMBank {
         return teclado.nextInt();
     }
 
-    //Función que pregunta al usuario si desea repetir la ejecución del programa o cerrr la apliciación.
-    public static void finalizarOpcion(Scanner teclado){
+    //Función que pregunta al usuario si desea repetir la ejecución del programa o cerrar la app.
+    public static void finalizarOpcion(Scanner teclado, boolean entradaIncorrecta){
 
         int respuesta;
         boolean respuestaIncorrecta = false;
@@ -145,44 +211,6 @@ public class UPMBank {
         return numeroUsuario;
     }
 
-    public static void hacerDeposito(Scanner teclado) {
-        System.out.println("Qué cantidad desea ingresar? Introduzca únicamente el valor numérico del depósito en euros.");
-        dineroAIngresar = teclado.nextDouble();
-
-        dineroEnCuenta += dineroAIngresar;
-        System.out.println("Su nuevo saldo es de " + dineroEnCuenta + "€");
-
-        depositoRealizado = true;
-    }
-
-    public static void hacerRetiro(Scanner teclado) {
-        System.out.println("Qué cantidad desea retirar? Introduzca únicamente el valor numérico del depósito en euros.");
-        dineroARetirar = teclado.nextDouble();
-
-        if (dineroARetirar <= dineroEnCuenta) {
-            dineroEnCuenta -= dineroARetirar;
-            System.out.println("Transacción exitosa. Su nuevo saldo es de " + dineroEnCuenta + "€");
-        }
-        else System.out.println("Fondos insuficientes");
-
-        retiroRealizado = true;
-    }
-
-    public static void hacerTransferencia(Scanner teclado) {
-        System.out.println("Introduzca el número de la cuenta destino:");
-        cuentaDestinoTransferencia = teclado.nextInt();
-        System.out.println("Qué cantidad desea transferir? Introduzca únicamente el valor numérico del depósito en euros.");
-        dineroATransferir = teclado.nextDouble();
-
-        if (dineroATransferir <= dineroEnCuenta) {
-            dineroEnCuenta -= dineroATransferir;
-            System.out.println("Transacción exitosa. Su nuevo saldo es de " + dineroEnCuenta + "€");
-        }
-        else System.out.println("Fondos insuficientes");
-
-        transferenciaReaizada = true;
-    }
-
     public static void solicitarPrestamo(Scanner teclado) {
         System.out.println("Introduzca su número de cuenta:");
         teclado.next();
@@ -201,8 +229,5 @@ public class UPMBank {
         SolicitudPrestamo.generarTablaAmortizacion(capitalPrestamo, interesMensual, mesesPrestamo);
         System.out.println("El capital de tu préstamo se ha introducido a tu cuenta bancaria.");
         dineroEnCuenta += capitalPrestamo;
-
-        prestamoRealizado = true;
     }
-
 }
