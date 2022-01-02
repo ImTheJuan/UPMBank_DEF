@@ -26,9 +26,11 @@ public class Transferencia {
     }
 
     public void imprimir(){
-        System.out.println("Cuenta Destino: "+ cuentaDestino.getNumero());
+        System.out.println("Tipo: TRANSFERENCIA");
+        System.out.println("Cuenta Origen: "+ cuentaOrigen.getNumero());
         System.out.println("Cantidad: " + dineroATransferir);
-        System.out.println("Saldo final: " + cuentaOrigen.getSaldo());
+        System.out.println("Cuenta Destino: "+ cuentaDestino.getNumero());
+        System.out.println();
     }
 
     public static Transferencia hacerTransferencia(Cuenta cuentaOrigen, Cuenta cuentaDestino, double dineroATransferir) {

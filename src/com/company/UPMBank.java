@@ -1,5 +1,9 @@
 package com.company;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class UPMBank {
@@ -36,14 +40,18 @@ public class UPMBank {
          fSalida.close();
 
      */
-    static int anosPrestamo = 0;
-    static double capitalPrestamo = 0.0, interesAnual = 0, dineroEnCuenta = 0.0;
 
     public static void main(String[] args) {
 
+        Scanner teclado = new Scanner(System.in);
         boolean entradaIncorrecta = true;
 
-        Scanner teclado = new Scanner(System.in);
+        //Mostrar menú sucursales y establecer el código.
+        try {
+            establecerCodigoSucursal(teclado);
+        } catch (IOException ex) {
+            System.out.println("Error: " + ex.getMessage());
+        }
 
         //Creación de la lista de clientes
         ListaClientes listaClientes = new ListaClientes(20);
@@ -53,7 +61,6 @@ public class UPMBank {
 
         //Creacion de la lista de todas las transferencias del banco
         ListaTransferencias listaTransferencias = new ListaTransferencias(1000);
-
 
         do {
             int numeroMenu = escribirMenu(teclado);
@@ -67,7 +74,7 @@ public class UPMBank {
                     //Se crea el ciente y se introduce en la lista de clientes del banco
                     Cliente cliente = Cliente.crearCliente(teclado, listaClientes);
                     listaClientes.insertarCliente(cliente);
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 2:
@@ -85,18 +92,17 @@ public class UPMBank {
                         cliente.getListaCuentas().insertarCuenta(cuenta);
                         listaCuentasGlobal.insertarCuenta(cuenta);
                     } else System.out.println("No existe ningún usuario registrado con ese DNI.");
-
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 3:
                     Movimiento.crearMovimiento(teclado, "DEPOSITO", listaClientes);
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 4:
                     Movimiento.crearMovimiento(teclado, "RETIRO", listaClientes);
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 5:
@@ -108,11 +114,8 @@ public class UPMBank {
                     if (cliente != null) {
                         if (cliente.getListaCuentas().getLista()[0] != null) {
                             //Se muestran las cuentas del usuario y se le pide que seleccione una (cuenta origen)
-                            for (int i = 0; i < cliente.getListaCuentas().getNumeroCuentas(); i++) {
-                                int numeroOrden = i + 1;
-                                System.out.print(numeroOrden + ". ");
-                                cliente.getListaCuentas().getLista()[i].imprimir();
-                            }
+                            cliente.mostrarCuentas();
+
                             System.out.println("Seleccione la cuenta con la que desea reallizar la transferencia (1, 2, 3 ...):");
                             int opcion = teclado.nextInt();
                             Cuenta cuentaOrigen = cliente.getListaCuentas().getLista()[opcion - 1];
@@ -136,12 +139,17 @@ public class UPMBank {
                         } else System.out.println("No tiene cuentas con las cuales operar. Por favor cree alguna en el menú principal.");
                     } else System.out.println("No existe ningún usuario registrado con ese DNI.");
 
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 case 6:
-                    solicitarPrestamo(teclado);
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    //Comprobar si el usuario existe o no.
+                    try {
+                        Prestamo.solicitarPrestamo(teclado, listaClientes);
+                    } catch(NullPointerException ex){
+                        System.out.println("No existe un usuario registrado con ese correo.");
+                    }
+                    finalizarOpcion(teclado);
                     break;
 
                 case 7:
@@ -155,7 +163,7 @@ public class UPMBank {
                     else System.out.println("No existe ningún usuario registrado en el sistema con esas credenciales. " +
                             "Por favor, asegúrese de estar dado de alta en UPMBank.");
 
-                    finalizarOpcion(teclado, entradaIncorrecta);
+                    finalizarOpcion(teclado);
                     break;
 
                 default:
@@ -165,8 +173,57 @@ public class UPMBank {
         } while (entradaIncorrecta);
     }
 
+    public static int escribirMenuSucursales(Scanner teclado) {
+        System.out.println("Bienvenido a tu app de UPMBank. Selecciona la sucursal del banco donde te encuentras.");
+        System.out.println("1. Campus Sur");
+        System.out.println("2. Ciudad Universitaria");
+        System.out.println("3. Madrid Ciudad");
+        System.out.println("4. Montegarcedo");
+        return teclado.nextInt();
+    }
+
+    public static void establecerCodigoSucursal(Scanner teclado) throws IOException {
+
+        //Identifica el campus seleccionado a partir de la respuesta del usuario
+        String sucursal = "";
+        int numeroMenuSucursales = escribirMenuSucursales(teclado);
+        switch(numeroMenuSucursales){
+            case 1:
+                sucursal = "Campus Sur";
+                break;
+
+            case 2:
+                sucursal = "Campus Ciudad Universitaria";
+                break;
+
+            case 3:
+                sucursal = "Campus Madrid Ciudad";
+                break;
+
+            case 4:
+                sucursal = "Campus Montegarcedo";
+                break;
+        }
+
+        //Lee el fichero y asigna el codigo de sucursal correspondiente al campus
+        String codigoSucursal = "";
+        FileReader fr = new FileReader("Sucursales.txt");
+        BufferedReader br = new BufferedReader(fr);
+        for (int i = 1; i <= 4; i++){
+            String linea = br.readLine();
+            String[] listaAux = linea.split("=");
+            if (Objects.equals(sucursal, listaAux[0])) {
+                codigoSucursal = listaAux[1];
+            }
+        }
+        br.close();
+        fr.close();
+
+        Cuenta.setCodigoSucursal(codigoSucursal);
+    }
+
     public static int escribirMenu(Scanner teclado) {
-        System.out.println("Bienvenido a tu app de UPMBank. Selecciona el número del trámite que deseas realizar.");
+        System.out.println("Selecciona el número del trámite que deseas realizar.");
         System.out.println("1. Darse de alta");
         System.out.println("2. Crear una cuenta bancaria");
         System.out.println("3. Realizar un depósito");
@@ -178,15 +235,16 @@ public class UPMBank {
         return teclado.nextInt();
     }
 
-    //Función que pregunta al usuario si desea repetir la ejecución del programa o cerrar la app.
-    public static void finalizarOpcion(Scanner teclado, boolean entradaIncorrecta){
+    public static void finalizarOpcion(Scanner teclado){
 
+        //Función que pregunta al usuario si desea repetir la ejecución del programa o cerrar la app.
         int respuesta;
         boolean respuestaIncorrecta = false;
 
         System.out.println("\nEscriba 0 para volver al menú de inicio y 1 para salir de la aplicación.");
         do {
             respuesta = teclado.nextInt();
+            boolean entradaIncorrecta;
             if (respuesta == 1) entradaIncorrecta = false;
             else if (respuesta != 0) {
                 System.out.println("Opción Incorrecta. Intenta de nuevo.");
@@ -211,23 +269,4 @@ public class UPMBank {
         return numeroUsuario;
     }
 
-    public static void solicitarPrestamo(Scanner teclado) {
-        System.out.println("Introduzca su número de cuenta:");
-        teclado.next();
-
-        System.out.println("Introduzca el capital por el cual desea al préstamo:");
-        capitalPrestamo = teclado.nextInt();
-
-        System.out.println("Introduzca el número de años en los cuales se deberá devolver el préstamo:");
-        anosPrestamo = teclado.nextInt();
-        int mesesPrestamo = anosPrestamo*12;
-
-        System.out.println("Introduzca interés anual al que quiere pagar este préstamo (introduzca el valor como porcentaje) :");
-        interesAnual = teclado.nextDouble()/100;
-        double interesMensual = interesAnual/12;
-
-        SolicitudPrestamo.generarTablaAmortizacion(capitalPrestamo, interesMensual, mesesPrestamo);
-        System.out.println("El capital de tu préstamo se ha introducido a tu cuenta bancaria.");
-        dineroEnCuenta += capitalPrestamo;
-    }
 }

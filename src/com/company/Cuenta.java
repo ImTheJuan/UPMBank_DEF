@@ -3,13 +3,14 @@ package com.company;
 import java.util.Scanner;
 
 public class Cuenta {
-    final private static String CODIGO_SUCURSAL = "9010";
-    final private static String CODIGO_ENTIDAD = "0201";
+    final private static String CODIGO_ENTIDAD = "9010";
+    private static String CODIGO_SUCURSAL;
     final private String NUMERO;
     final private TipoDeCuenta TIPO_DE_CUENTA;
     private double saldo;
     private ListaMovimientos listaMovimientos;
     private ListaTransferencias listaTransferencias;
+    private ListaPrestamos listaPrestamos;
 
     public Cuenta(String numero, TipoDeCuenta tipoDeCuenta){
         NUMERO = numero;
@@ -17,6 +18,7 @@ public class Cuenta {
         saldo = 0;
         listaTransferencias = new ListaTransferencias(20);
         listaMovimientos = new ListaMovimientos(20);
+        listaPrestamos = new ListaPrestamos(20);
     }
 
     public String getNumero() {
@@ -35,12 +37,20 @@ public class Cuenta {
         this.saldo = saldo;
     }
 
+    public static void setCodigoSucursal(String codigoSucursal) {
+        CODIGO_SUCURSAL = codigoSucursal;
+    }
+
     public ListaMovimientos getListaMovimientos() {
         return listaMovimientos;
     }
 
     public ListaTransferencias getListaTransferencias() {
         return listaTransferencias;
+    }
+
+    public ListaPrestamos getListaPrestamos(){
+        return listaPrestamos;
     }
 
     //La función se encarga de leer un número por teclado entre 1 y 3 y relacionarlo con un tipo de cuenta posible.
@@ -140,8 +150,8 @@ public class Cuenta {
 
     public void imprimir(){
         System.out.println("Numero de cuenta: " + this.getNumero());
-        System.out.println("Tipo de cuenta: " + this.getTipoDeCuenta());
-        System.out.println("Saldo en la cuenta: " + this.getSaldo() + "€");
+        System.out.println("Tipo: " + this.getTipoDeCuenta());
+        System.out.println("Saldo: " + this.getSaldo() + "€");
     }
 
     //Busca una cuenta a partir de su número
@@ -155,5 +165,13 @@ public class Cuenta {
             i++;
         }
         return cuenta;
+    }
+
+    public void mostrarMovimientos(){
+        if (this.getListaMovimientos().getLista()[0] != null) {
+            for (int j = 0; j < this.getListaMovimientos().getOcupacion(); j++) {
+                this.getListaMovimientos().getLista()[j].imprimir();
+            }
+        }
     }
 }

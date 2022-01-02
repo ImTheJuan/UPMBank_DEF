@@ -30,9 +30,10 @@ public class Movimiento {
     }
 
     public void imprimir(){
-        System.out.println("Cuenta Nº: "+ cuenta.getNumero());
         System.out.println("Tipo: " + tipo);
+        System.out.println("Cuenta: " + cuenta.getNumero());
         System.out.println("Cantidad: " + dinero);
+        System.out.println();
     }
 
     public static Movimiento crearMovimiento(Scanner teclado, String tipo, ListaClientes listaClientes){
@@ -49,7 +50,7 @@ public class Movimiento {
                     System.out.print(numeroOrden + ". ");
                     cliente.getListaCuentas().getLista()[i].imprimir();
                 }
-                System.out.println("Seleccione la cuenta a la que desea reallizar el depósito (1, 2, 3 ...):");
+                System.out.println("Seleccione la cuenta a la que desea reallizar el " + tipo + " (1, 2, 3 ...):");
                 int opcion = teclado.nextInt();
                 Cuenta cuenta = cliente.getListaCuentas().getLista()[opcion - 1];
 

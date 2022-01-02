@@ -103,7 +103,7 @@ public class Cliente {
         do {
             System.out.println("Introduce el número de tu DNI");
             dni = teclado.nextInt();
-            System.out.println("Introduce la letra de tu DNI:");
+            System.out.println("Introduce la letra de tu DNI: (En mayúscula)");
             letraDni = teclado.next();
             char[] comprobacionLetras = new char[]{'T', 'R', 'W', 'A', 'G', 'M', 'Y', 'F', 'P', 'D', 'X', 'B', 'N', 'J',
                     'Z', 'S', 'Q', 'V', 'H', 'L', 'C', 'K', 'E'};
@@ -126,7 +126,9 @@ public class Cliente {
         int i = 0;
         Cliente cliente = null;
         while (i<listaClientes.length && cliente == null){
-            if (listaClientes[i].getDni().equals(DNI)) cliente = listaClientes[i];
+            if (listaClientes[i] != null) {
+                if (listaClientes[i].getDni().equals(DNI)) cliente = listaClientes[i];
+            }
             i++;
         }
         return cliente;
@@ -175,7 +177,14 @@ public class Cliente {
         return cliente;
     }
 
-    public void imprimir() {
+    public void mostrarCuentas() {
+        for (int i = 0; i < this.getListaCuentas().getNumeroCuentas(); i++) {
+            int numeroOrden = i + 1;
+            System.out.print(numeroOrden + ". ");
+            this.getListaCuentas().getLista()[i].imprimir();
+        }
+    }
+    public void imprimir () {
 
         //Muestra los datos del cliente
         System.out.println("Hola " + this.getNombre() + " " + this.getApellidos());
@@ -187,13 +196,13 @@ public class Cliente {
 
         //Muestra las cuentas del cliente (siempre que tenga)
         if (this.getListaCuentas().getLista()[0] != null) {
-            for (int i = 0; i < this.getListaCuentas().getNumeroCuentas(); i++) {
-                int numeroOrden = i+1;
-                System.out.print(numeroOrden + ". ");
-                this.getListaCuentas().getLista()[i].imprimir();
 
-                //Muestra las operaciones (depósitos y extracciones) de cada cuenta del cliente
+            this.mostrarCuentas();
+
+            //Muestra las operaciones (depósitos y extracciones) de cada cuenta del cliente
+            for(int i = 0; i < this.getListaCuentas().getNumeroCuentas(); i++){
                 if (this.getListaCuentas().getLista()[i].getListaMovimientos().getLista()[0] != null) {
+                    System.out.println("Lista de movimientos:");
                     for (int j = 0; j < this.getListaCuentas().getLista()[i].getListaMovimientos().getOcupacion(); j++) {
                         this.getListaCuentas().getLista()[i].getListaMovimientos().getLista()[j].imprimir();
                     }
@@ -204,8 +213,13 @@ public class Cliente {
                         this.getListaCuentas().getLista()[i].getListaTransferencias().getLista()[j].imprimir();
                     }
                 }
+                //Muestra los préstamos de cada cuenta del cliente
+                if (this.getListaCuentas().getLista()[i].getListaPrestamos().getLista()[0] != null) {
+                    for (int j = 0; j < this.getListaCuentas().getLista()[i].getListaPrestamos().getOcupacion(); j++) {
+                        this.getListaCuentas().getLista()[i].getListaPrestamos().getLista()[j].imprimir();
+                    }
+                }
             }
-        }
-        else System.out.println("No tienes ninguna cuenta todavía. Puedes crear alguna desde el menú principal.");
+        } else System.out.println("No tienes ninguna cuenta todavía. Puedes crear alguna desde el menú principal.");
     }
 }
